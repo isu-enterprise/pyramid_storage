@@ -164,7 +164,7 @@ class LocalFileStorage(object):
         :param folder: relative path of sub-folder
         :param randomize: randomize the filename
         :param extensions: iterable of allowed extensions, if not default
-        :param overwrite: overwrite the existing file (True) or resolve into another (False)
+        :param replace: overwrite the existing file (True) or resolve into another (False)
         :returns: modified filename
         """
 
@@ -189,7 +189,7 @@ class LocalFileStorage(object):
             filename = utils.random_filename(filename)
 
         filename, path = self.resolve_name(
-            filename, dest_folder, overwrite=kwargs.get("overwrite", False))
+            filename, dest_folder, replace=kwargs.get("replace", False))
 
         try:
             file.seek(0)
@@ -204,7 +204,7 @@ class LocalFileStorage(object):
 
         return filename
 
-    def resolve_name(self, name, folder, overwrite=False):
+    def resolve_name(self, name, folder, replace=False):
         """Resolves a unique name and the correct path. If a filename
         for that path already exists then a numeric prefix will be
         added, for example test.jpg -> test-1.jpg etc.
@@ -217,7 +217,7 @@ class LocalFileStorage(object):
         counter = 0
         while True:
             path = os.path.join(folder, name)
-            if not os.path.exists(path) or overwrite:
+            if not os.path.exists(path) or replace:
                 return name, path
             counter += 1
             name = '%s-%d%s' % (basename, counter, ext)
