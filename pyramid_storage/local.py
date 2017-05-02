@@ -11,6 +11,7 @@ from .extensions import resolve_extensions
 from .exceptions import FileNotAllowed
 from .interfaces import IFileStorage
 from .registry import register_file_storage_impl
+import io
 
 
 def includeme(config):
@@ -188,7 +189,10 @@ class LocalFileStorage(object):
 
         filename, path = self.resolve_name(filename, dest_folder)
 
-        file.seek(0)
+        try:
+            file.seek(0)
+        except io.UnsupportedOperation:
+            pass
 
         with open(path, "wb") as dest:
             shutil.copyfileobj(file, dest)
