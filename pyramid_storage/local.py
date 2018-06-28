@@ -11,7 +11,7 @@ from .extensions import resolve_extensions
 from .exceptions import FileNotAllowed
 from .interfaces import IFileStorage
 from .registry import register_file_storage_impl
-import io
+# import io
 
 
 def includeme(config):
@@ -47,6 +47,15 @@ class LocalFileStorage(object):
             ('extensions', False, 'default'),
         )
         kwargs = utils.read_settings(settings, options, prefix)
+
+        #for name, required, default in options:
+        #    try:
+        #        kwargs[name] = settings[prefix + name]
+        #    except KeyError:
+        #        if required:
+        #            raise ValueError("%s%s is required" % (prefix, name))
+        #        kwargs[name] = default
+
         return cls(**kwargs)
 
     def __init__(self, base_path, base_url='', extensions='default'):
@@ -68,6 +77,11 @@ class LocalFileStorage(object):
         :param filename: base name of file
         """
         return os.path.join(self.base_path, filename)
+
+    def open(self, filename):
+        """Return filelike object stored
+        """
+        return open(self.path(filename))
 
     def delete(self, filename):
         """Deletes the filename. Filename is resolved with the
@@ -154,11 +168,12 @@ class LocalFileStorage(object):
         return self.save_file(open(filename, "rb"), filename, *args, **kwargs)
 
     def save_file(self, file, filename, folder=None, randomize=False,
-                  extensions=None, **kwargs):
+                  extensions=None, replace=False, **kwargs):
         """Saves a file object to the uploads location.
         Returns the resolved filename, i.e. the folder +
         the (randomized/incremented) base name.
 
+        :param fs: **cgi.FieldStorage** object (or similar)
         :param file: file or file like object with content to be saved
         :param filename: original filename
         :param folder: relative path of sub-folder
@@ -189,10 +204,10 @@ class LocalFileStorage(object):
             filename = utils.random_filename(filename)
 
         filename, path = self.resolve_name(
-            filename, dest_folder, replace=kwargs.get("replace", False))
+            filename, dest_folder, replace=replace)
 
         try:
-            file.seek(0)
+        file.seek(0)
         except io.UnsupportedOperation:
             pass
 

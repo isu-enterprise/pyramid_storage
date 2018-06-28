@@ -2,6 +2,7 @@
 
 import os
 import mimetypes
+import tempfile
 
 from pyramid import compat
 from pyramid.settings import asbool
@@ -105,6 +106,19 @@ class S3FileStorage(object):
         :param filename: base name of file
         """
         return compat.urlparse.urljoin(self.base_url, filename)
+
+    def open(self, filename):
+        """Return filelike object stored
+        """
+
+        bucket = self.get_bucket()
+        key = bucket.get_key(filename) or bucket.new_key(filename)
+
+        f = tempfile.NamedTemporaryFile(delete=False)
+        f.close()
+        key.get_contents_to_filename(f.name)
+
+        return open(f.name)
 
     def exists(self, filename):
         return self.get_bucket().new_key(filename).exists()
@@ -235,3 +249,21 @@ class S3FileStorage(object):
                                    rewind=True)
 
         return filename
+
+    def path(self, filename):
+        """Returns absolute file path of the filename, joined to the
+        base_path.
+
+        :param filename: base name of file
+        """
+        raise NotImplementedError()
+
+    def resolve_name(self, name, folder):
+        """Resolves a unique name and the correct path. If a filename
+        for that path already exists then a numeric prefix will be
+        added, for example test.jpg -> test-1.jpg etc.
+
+        :param name: base name of file
+        :param folder: absolute folder path
+        """
+        raise NotImplementedError()
