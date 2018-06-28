@@ -11,7 +11,7 @@ from .extensions import resolve_extensions
 from .exceptions import FileNotAllowed
 from .interfaces import IFileStorage
 from .registry import register_file_storage_impl
-# import io
+import io
 
 
 def includeme(config):
@@ -48,7 +48,7 @@ class LocalFileStorage(object):
         )
         kwargs = utils.read_settings(settings, options, prefix)
 
-        #for name, required, default in options:
+        # for name, required, default in options:
         #    try:
         #        kwargs[name] = settings[prefix + name]
         #    except KeyError:
@@ -207,7 +207,7 @@ class LocalFileStorage(object):
             filename, dest_folder, replace=replace)
 
         try:
-        file.seek(0)
+            file.seek(0)
         except io.UnsupportedOperation:
             pass
 
