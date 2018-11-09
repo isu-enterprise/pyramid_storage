@@ -159,7 +159,7 @@ class LocalFileStorage(object):
         return self.save_file(open(filename, "rb"), filename, *args, **kwargs)
 
     def save_file(self, file, filename, folder=None, randomize=False,
-        extensions=None, replace=False, partition_sub_dir=False, **kwargs):
+                  extensions=None, replace=False, partition_sub_dir=False, **kwargs):
         """Saves a file object to the uploads location.
         Returns the resolved filename, i.e. the folder +
         the (randomized/incremented) base name.
@@ -170,7 +170,8 @@ class LocalFileStorage(object):
         :param folder: relative path of sub-folder
         :param randomize: randomize the filename
         :param extensions: iterable of allowed extensions, if not default
-        :param replace: overwrite the existing file (True) or resolve into another (False)
+        :param replace: overwrite the existing file (True) or resolve into another one (False)
+        :param partition_sub_dir: make subdirs according to subdir structure of loaded file
         :returns: modified filename
         """
 
@@ -232,6 +233,7 @@ class LocalFileStorage(object):
                 return name, path
             counter += 1
             name = '%s-%d%s' % (basename, counter, ext)
+
     def get_files_list(self, folder):
         """
         Get a list of files from current folder
