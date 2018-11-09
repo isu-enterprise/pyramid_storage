@@ -203,7 +203,7 @@ class LocalFileStorage(object):
             filename, dest_folder, replace=replace)
 
         try:
-        file.seek(0)
+            file.seek(0)
         except io.UnsupportedOperation:
             pass
 
