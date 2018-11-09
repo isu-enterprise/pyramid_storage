@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import re
+
 import mock
 import pytest
 
@@ -7,10 +9,20 @@ from pyramid import compat
 from pyramid import exceptions as pyramid_exceptions
 
 
+class MockBucket(mock.Mock):
+
+    def list(self, prefix, delimiter):
+
+        mock_key_1 = mock.Mock
+        mock_key_1.name = 'image1.png'
+
+        return [mock_key_1]
+
+
 class MockS3Connection(object):
 
     def get_bucket(self, bucket_name):
-        return mock.Mock()
+        return MockBucket()
 
 
 def _get_mock_s3_connection(self):
@@ -212,6 +224,29 @@ def test_save_in_folder():
     assert name == "my_folder/test.jpg"
 
 
+def test_save_in_folder_with_subdir():
+
+    from pyramid_storage import s3
+
+    fs = mock.Mock()
+    fs.filename = "test.jpg"
+
+    s = s3.S3FileStorage(
+        access_key="AK",
+        secret_key="SK",
+        bucket_name="my_bucket",
+        extensions="images")
+
+    with mock.patch(
+            'pyramid_storage.s3.S3FileStorage.get_connection',
+            _get_mock_s3_connection):
+        name = s.save(fs, folder="my_folder", partition_sub_dir=True)
+
+    regex = re.compile('my_folder/[a-f-0-9]+/test.jpg')
+
+    assert regex.match(name) is not None
+
+
 def test_delete():
 
     from pyramid_storage import s3
@@ -227,6 +262,24 @@ def test_delete():
             _get_mock_s3_connection):
 
         s.delete("test.jpg")
+
+
+def test_folder_listing():
+    from pyramid_storage import s3
+
+    s = s3.S3FileStorage(
+        access_key="AK",
+        secret_key="SK",
+        bucket_name="my_bucket",
+        extensions="images")
+
+    with mock.patch(
+            'pyramid_storage.s3.S3FileStorage.get_connection',
+            _get_mock_s3_connection):
+
+        files_list = s.get_files_list("uploads")
+
+        assert 'image1.png' in files_list
 
 
 def test_from_settings_with_defaults():

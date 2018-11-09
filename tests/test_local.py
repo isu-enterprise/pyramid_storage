@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
+
 import mock
 import pytest
 
@@ -198,6 +200,35 @@ def test_save_in_folder():
         patch.stop()
 
 
+def test_save_in_folder_with_subdir():
+    from pyramid_storage import local
+
+    fs = mock.Mock()
+    fs.filename = "test.jpg"
+
+    s = local.LocalFileStorage("uploads", extensions="images")
+
+    patches = (
+        mock.patch(_mock_open_name()), _mock_open(),
+        mock.patch("os.path.exists", lambda p: False),
+        mock.patch("os.makedirs", lambda p: True),
+        mock.patch("shutil.copyfileobj", lambda x, y: True),
+    )
+
+    for patch in patches:
+        patch.start()
+
+    name = s.save(fs, folder="photos", partition_sub_dir=True)
+
+    regex = re.compile(
+    "photos{}[a-f-0-9]+{}test.jpg".format(os.path.sep, os.path.sep)
+    )
+    assert regex.match(name) is not None
+
+    for patch in patches:
+        patch.stop()
+
+
 def test_url():
     from pyramid_storage import local
     s = local.LocalFileStorage("", "http://localhost/")
@@ -285,3 +316,22 @@ def test_from_settings_if_base_path_missing():
 
     with pytest.raises(pyramid_exceptions.ConfigurationError):
         local.LocalFileStorage.from_settings({}, 'storage.')
+
+
+def test_folder_listing():
+    from pyramid_storage import local
+    s = local.LocalFileStorage("uploads")
+
+    def mock_get_file_list(folder):
+        return ['image1.png', 'image2.png']
+
+    patches = (
+        mock.patch('os.listdir', mock_get_file_list),
+        mock.patch('os.path.exists', lambda p: True),
+    )
+    for patch in patches:
+        patch.start()
+
+    files_list = s.get_files_list('uploads')
+    assert 'image1.png' in files_list
+    assert 'image2.png' in files_list
